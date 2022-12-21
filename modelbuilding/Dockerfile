@@ -3,3 +3,4 @@ WORKDIR /pipelines
 COPY requirements.txt /pipelines
 RUN pip install -r requirements.txt
 COPY modelbuild.py /pipelines
+ENV PATH=/root/.local:$PATH

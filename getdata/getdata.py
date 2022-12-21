@@ -1,13 +1,15 @@
 from typing import NamedTuple
+from tensorflow import keras
+from minio import Minio
+import numpy as np
+import json
+from collections import namedtuple
+
 def get_data_batch() -> NamedTuple('Outputs', [('datapoints_training', float),('datapoints_test', float),('dataset_version', str)]):
     """
     Function to get dataset and load it to minio bucket
     """
     print("getting data")
-    from tensorflow import keras
-    from minio import Minio
-    import numpy as np
-    import json
 
     minio_client = Minio(
         "10.0.102.158:9000",
@@ -49,8 +51,7 @@ def get_data_batch() -> NamedTuple('Outputs', [('datapoints_training', float),('
 
     print(f"x_test shape: {x_test.shape}")
     print(f"y_test shape: {y_test.shape}")
-    
-    from collections import namedtuple
+
     divmod_output = namedtuple('Outputs', ['datapoints_training', 'datapoints_test', 'dataset_version'])
     return [float(x_train.shape[0]),float(x_test.shape[0]),dataset_version]
 

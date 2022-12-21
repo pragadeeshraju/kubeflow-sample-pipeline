@@ -1,3 +1,14 @@
+from tensorflow import keras
+import tensorflow as tf
+from minio import Minio
+import numpy as np
+import pandas as pd
+import json
+import os
+import glob
+from collections import namedtuple
+from typing import NamedTuple
+
 def model_building(
     no_epochs:int = 1,
     optimizer: str = "adam"
@@ -6,13 +17,7 @@ def model_building(
     Build the model with Keras API
     Export model parameters
     """
-    from tensorflow import keras
-    import tensorflow as tf
-    from minio import Minio
-    import numpy as np
-    import pandas as pd
-    import json
-    
+
     minio_client = Minio(
         "10.0.102.158:9000",
         access_key="minio",
@@ -137,9 +142,6 @@ def model_building(
     ### Save model to minIO
     
     keras.models.save_model(model,"/tmp/detect-digits")
-    
-    from minio import Minio
-    import os
 
     minio_client = Minio(
             "10.0.102.158:9000",
@@ -148,9 +150,6 @@ def model_building(
             secure=False
         )
     minio_bucket = "mlpipeline"
-
-
-    import glob
 
     def upload_local_directory_to_minio(local_path, bucket_name, minio_path):
         assert os.path.isdir(local_path)
@@ -171,7 +170,6 @@ def model_building(
     
     print("Saved model to minIO")
     
-    from collections import namedtuple
     output = namedtuple('output', ['mlpipeline_ui_metadata', 'mlpipeline_metrics'])
     return output(json.dumps(metadata),json.dumps(metrics))
 

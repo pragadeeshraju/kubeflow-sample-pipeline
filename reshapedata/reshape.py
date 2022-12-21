@@ -1,11 +1,11 @@
+from minio import Minio
+import numpy as np
+
 def reshape_data():
     """
     Reshape the data for model building
     """
     print("reshaping data")
-    
-    from minio import Minio
-    import numpy as np
 
     minio_client = Minio(
         "10.0.102.158:9000",

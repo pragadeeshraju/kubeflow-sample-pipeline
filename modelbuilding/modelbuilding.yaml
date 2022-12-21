@@ -3,7 +3,7 @@ description: Building model and uploading it to minio
 
 implementation:
   container:
-    image: praju/kubeflowtest:downloadata
+    image: praju/kfp:modelbuildv1
     command: [
       python, modelbuild.py,
     ]

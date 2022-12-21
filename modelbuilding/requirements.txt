@@ -1,5 +1,6 @@
 minio
 tensorflow
-glob
+glob2
 typing
-collections
+numpy
+pandas
