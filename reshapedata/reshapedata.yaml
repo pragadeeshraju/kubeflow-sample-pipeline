@@ -1,0 +1,9 @@
+name: Reshape Data Function
+description: Reshape the data from minio
+
+implementation:
+  container:
+    image: praju/kubeflowtest:downloadata
+    command: [
+      python, reshape.py,
+    ]

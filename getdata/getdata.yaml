@@ -1,0 +1,9 @@
+name: Download Data Function
+description: Download dataset from minio
+
+implementation:
+  container:
+    image: praju/kubeflowtest:downloadata
+    command: [
+      python, getdata.py,
+    ]

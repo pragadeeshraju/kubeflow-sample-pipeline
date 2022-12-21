@@ -1,0 +1,9 @@
+name: ModelBuild Data Function
+description: Building model and uploading it to minio
+
+implementation:
+  container:
+    image: praju/kubeflowtest:downloadata
+    command: [
+      python, modelbuild.py,
+    ]
