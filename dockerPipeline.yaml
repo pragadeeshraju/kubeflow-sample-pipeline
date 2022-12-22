@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: docker-test-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.17, pipelines.kubeflow.org/pipeline_compilation_time: '2022-12-22T17:07:11.093832',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Applies Decision Tree
+      and Logistic Regression for classification problem.", "name": "Docker test"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.17}
+spec:
+  entrypoint: docker-test
+  templates:
+  - name: docker-test
+    dag:
+      tasks:
+      - {name: download-data-function, template: download-data-function}
+      - name: modelbuild-data-function
+        template: modelbuild-data-function
+        dependencies: [reshape-data-function]
+      - name: reshape-data-function
+        template: reshape-data-function
+        dependencies: [download-data-function]
+  - name: download-data-function
+    container:
+      args: []
+      command: [python, getdata.py]
+      image: praju/kfp:getdatav1
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Download
+          dataset from minio", "implementation": {"container": {"command": ["python",
+          "getdata.py"], "image": "praju/kfp:getdatav1"}}, "name": "Download Data
+          Function"}', pipelines.kubeflow.org/component_ref: '{"digest": "c28ba28049113318a9fc89a8c277fccdc03c8df8ea56509e68be4ab769c176bf",
+          "url": "getdata/getdata.yaml"}'}
+  - name: modelbuild-data-function
+    container:
+      args: []
+      command: [python, modelbuild.py]
+      image: praju/kfp:modelbuildv1
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Building
+          model and uploading it to minio", "implementation": {"container": {"command":
+          ["python", "modelbuild.py"], "image": "praju/kfp:modelbuildv1"}}, "name":
+          "ModelBuild Data Function"}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "babd47c46c70149db4bd4cf0ec526eb00de4a33ba492ef6f46b6e8e35dc38d99", "url":
+          "modelbuilding/modelbuilding.yaml"}'}
+  - name: reshape-data-function
+    container:
+      args: []
+      command: [python, reshape.py]
+      image: praju/kfp:reshapev1
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Reshape
+          the data from minio", "implementation": {"container": {"command": ["python",
+          "reshape.py"], "image": "praju/kfp:reshapev1"}}, "name": "Reshape Data Function"}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "dc5aaef6121eb154ded266bd23dd91890b26450ba4f8bf896e1ede7521c42a84",
+          "url": "reshapedata/reshapedata.yaml"}'}
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner

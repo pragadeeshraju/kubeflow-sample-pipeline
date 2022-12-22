@@ -12,7 +12,7 @@ def get_data_batch() -> NamedTuple('Outputs', [('datapoints_training', float),('
     print("getting data")
 
     minio_client = Minio(
-        "10.0.102.158:9000",
+        "minio-service.kubeflow.svc.cluster.local:9000",
         access_key="minio",
         secret_key="minio123",
         secure=False
