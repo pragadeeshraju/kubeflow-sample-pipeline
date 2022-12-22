@@ -3,7 +3,7 @@ description: Building model and uploading it to minio
 
 implementation:
   container:
-    image: praju/kfp:modelbuildv1
+    image: praju/kfp:modelbuildv2
     command: [
       python, modelbuild.py,
     ]

@@ -144,7 +144,7 @@ def model_building(
     keras.models.save_model(model,"/tmp/detect-digits")
 
     minio_client = Minio(
-            "10.0.102.158:9000",
+            "minio-service.kubeflow.svc.cluster.local:9000",
             access_key="minio",
             secret_key="minio123",
             secure=False

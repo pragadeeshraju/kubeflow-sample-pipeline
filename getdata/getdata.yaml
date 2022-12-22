@@ -3,7 +3,7 @@ description: Download dataset from minio
 
 implementation:
   container:
-    image: praju/kfp:getdatav1
+    image: praju/kfp:getdatav2
     command: [
       python, getdata.py,
     ]
