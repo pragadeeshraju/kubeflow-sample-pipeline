@@ -1,0 +1,176 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: docker-test-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.17, pipelines.kubeflow.org/pipeline_compilation_time: '2023-01-09T17:52:51.531494',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Applies Decision Tree
+      and Logistic Regression for classification problem.", "name": "Docker test"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.17}
+spec:
+  entrypoint: docker-test
+  templates:
+  - name: docker-test
+    dag:
+      tasks:
+      - {name: download-data-function, template: download-data-function}
+      - name: modelbuild-data-function
+        template: modelbuild-data-function
+        dependencies: [reshape-data-function]
+      - name: reshape-data-function
+        template: reshape-data-function
+        dependencies: [download-data-function]
+      - name: serve-a-model-with-kserve
+        template: serve-a-model-with-kserve
+        dependencies: [modelbuild-data-function]
+  - name: download-data-function
+    container:
+      args: []
+      command: [python, getdata.py]
+      image: praju/kfp:getdatav3
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Download
+          dataset from minio", "implementation": {"container": {"command": ["python",
+          "getdata.py"], "image": "praju/kfp:getdatav3"}}, "name": "Download Data
+          Function"}', pipelines.kubeflow.org/component_ref: '{"digest": "7c16435382011f789d40da3d9c27cd928434b168ca85a5b1527ee0c874d26e01",
+          "url": "getdata/getdata.yaml"}'}
+  - name: modelbuild-data-function
+    container:
+      args: []
+      command: [python, modelbuild.py]
+      image: praju/kfp:modelbuildv3
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Building
+          model and uploading it to minio", "implementation": {"container": {"command":
+          ["python", "modelbuild.py"], "image": "praju/kfp:modelbuildv3"}}, "name":
+          "ModelBuild Data Function"}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "48097b9d7bca86182277944a0cb62102e83a38b771ca19708254282f47d9505e", "url":
+          "modelbuilding/modelbuilding.yaml"}'}
+  - name: reshape-data-function
+    container:
+      args: []
+      command: [python, reshape.py]
+      image: praju/kfp:reshapev3
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Reshape
+          the data from minio", "implementation": {"container": {"command": ["python",
+          "reshape.py"], "image": "praju/kfp:reshapev3"}}, "name": "Reshape Data Function"}',
+        pipelines.kubeflow.org/component_ref: '{"digest": "631067cab6a90a3600998dd0e5255f377247055f442f0ef20ba430eb4e0ec5c9",
+          "url": "reshapedata/reshapedata.yaml"}'}
+  - name: serve-a-model-with-kserve
+    container:
+      args:
+      - -u
+      - kservedeployer.py
+      - --action
+      - apply
+      - --model-name
+      - tensorflow-sample
+      - --model-uri
+      - s3://mlpipeline/mnistdocker/models/detect-digits/
+      - --canary-traffic-percent
+      - '100'
+      - --namespace
+      - kubeflow-user-example-com
+      - --framework
+      - tensorflow
+      - --custom-model-spec
+      - '{}'
+      - --autoscaling-target
+      - '0'
+      - --service-account
+      - sa-minio-kserve
+      - --enable-istio-sidecar
+      - "True"
+      - --output-path
+      - /tmp/outputs/InferenceService_Status/data
+      - --inferenceservice-yaml
+      - '{}'
+      - --watch-timeout
+      - '300'
+      - --min-replicas
+      - '-1'
+      - --max-replicas
+      - '-1'
+      - --request-timeout
+      - '60'
+      - --enable-isvc-status
+      - "True"
+      command: [python]
+      image: quay.io/aipipeline/kserve-component:v0.7.0
+    outputs:
+      artifacts:
+      - {name: serve-a-model-with-kserve-InferenceService-Status, path: /tmp/outputs/InferenceService_Status/data}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.17
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+      annotations: {pipelines.kubeflow.org/component_spec: '{"description": "Serve
+          Models using KServe", "implementation": {"container": {"args": ["-u", "kservedeployer.py",
+          "--action", {"inputValue": "Action"}, "--model-name", {"inputValue": "Model
+          Name"}, "--model-uri", {"inputValue": "Model URI"}, "--canary-traffic-percent",
+          {"inputValue": "Canary Traffic Percent"}, "--namespace", {"inputValue":
+          "Namespace"}, "--framework", {"inputValue": "Framework"}, "--custom-model-spec",
+          {"inputValue": "Custom Model Spec"}, "--autoscaling-target", {"inputValue":
+          "Autoscaling Target"}, "--service-account", {"inputValue": "Service Account"},
+          "--enable-istio-sidecar", {"inputValue": "Enable Istio Sidecar"}, "--output-path",
+          {"outputPath": "InferenceService Status"}, "--inferenceservice-yaml", {"inputValue":
+          "InferenceService YAML"}, "--watch-timeout", {"inputValue": "Watch Timeout"},
+          "--min-replicas", {"inputValue": "Min Replicas"}, "--max-replicas", {"inputValue":
+          "Max Replicas"}, "--request-timeout", {"inputValue": "Request Timeout"},
+          "--enable-isvc-status", {"inputValue": "Enable ISVC Status"}], "command":
+          ["python"], "image": "quay.io/aipipeline/kserve-component:v0.7.0"}}, "inputs":
+          [{"default": "create", "description": "Action to execute on KServe", "name":
+          "Action", "type": "String"}, {"default": "", "description": "Name to give
+          to the deployed model", "name": "Model Name", "type": "String"}, {"default":
+          "", "description": "Path of the S3 or GCS compatible directory containing
+          the model.", "name": "Model URI", "type": "String"}, {"default": "100",
+          "description": "The traffic split percentage between the candidate model
+          and the last ready model", "name": "Canary Traffic Percent", "type": "String"},
+          {"default": "", "description": "Kubernetes namespace where the KServe service
+          is deployed.", "name": "Namespace", "type": "String"}, {"default": "", "description":
+          "Machine Learning Framework for Model Serving.", "name": "Framework", "type":
+          "String"}, {"default": "{}", "description": "Custom model runtime container
+          spec in JSON", "name": "Custom Model Spec", "type": "String"}, {"default":
+          "0", "description": "Autoscaling Target Number", "name": "Autoscaling Target",
+          "type": "String"}, {"default": "", "description": "ServiceAccount to use
+          to run the InferenceService pod", "name": "Service Account", "type": "String"},
+          {"default": "True", "description": "Whether to enable istio sidecar injection",
+          "name": "Enable Istio Sidecar", "type": "Bool"}, {"default": "{}", "description":
+          "Raw InferenceService serialized YAML for deployment", "name": "InferenceService
+          YAML", "type": "String"}, {"default": "300", "description": "Timeout seconds
+          for watching until InferenceService becomes ready.", "name": "Watch Timeout",
+          "type": "String"}, {"default": "-1", "description": "Minimum number of InferenceService
+          replicas", "name": "Min Replicas", "type": "String"}, {"default": "-1",
+          "description": "Maximum number of InferenceService replicas", "name": "Max
+          Replicas", "type": "String"}, {"default": "60", "description": "Specifies
+          the number of seconds to wait before timing out a request to the component.",
+          "name": "Request Timeout", "type": "String"}, {"default": "True", "description":
+          "Specifies whether to store the inference service status as the output parameter",
+          "name": "Enable ISVC Status", "type": "Bool"}], "name": "Serve a model with
+          KServe", "outputs": [{"description": "Status JSON output of InferenceService",
+          "name": "InferenceService Status", "type": "String"}]}', pipelines.kubeflow.org/component_ref: '{"digest":
+          "fa5f4341960280a805731c45f3901fbe900d1e0a14f24668b6e2898e13e3a3db", "url":
+          "https://raw.githubusercontent.com/kubeflow/pipelines/master/components/kserve/component.yaml"}',
+        pipelines.kubeflow.org/arguments.parameters: '{"Action": "apply", "Autoscaling
+          Target": "0", "Canary Traffic Percent": "100", "Custom Model Spec": "{}",
+          "Enable ISVC Status": "True", "Enable Istio Sidecar": "True", "Framework":
+          "tensorflow", "InferenceService YAML": "{}", "Max Replicas": "-1", "Min
+          Replicas": "-1", "Model Name": "tensorflow-sample", "Model URI": "s3://mlpipeline/mnistdocker/models/detect-digits/",
+          "Namespace": "kubeflow-user-example-com", "Request Timeout": "60", "Service
+          Account": "sa-minio-kserve", "Watch Timeout": "300"}'}
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner

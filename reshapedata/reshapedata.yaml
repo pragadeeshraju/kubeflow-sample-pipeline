@@ -3,7 +3,7 @@ description: Reshape the data from minio
 
 implementation:
   container:
-    image: praju/kfp:reshapev2
+    image: praju/kfp:reshapev3
     command: [
       python, reshape.py,
     ]
